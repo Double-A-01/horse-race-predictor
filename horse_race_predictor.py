@@ -1,5 +1,21 @@
 import streamlit as st
 from datetime import datetime
+import requests
+import time
+import random
+from bs4 import BeautifulSoup
+
+# Utility function to fetch HTML
+def get_html(url):
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        time.sleep(random.uniform(1, 2))
+        return response.text
+    except Exception as e:
+        print(f"Error fetching {url}: {e}")
+        return ""
 
 # Add date input before calling fetch_available_courses
 date_input = st.date_input("Select race date", value=datetime.today())
