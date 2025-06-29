@@ -1,3 +1,66 @@
+import streamlit as st
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime
+from bs4 import BeautifulSoup
+import re
+import time
+import random
+import os
+
+# --- CONFIGURATION ---
+DRAW_BIAS = {i: 0 for i in range(1, 21)}
+STORAGE_PATH = "race_results.csv"
+WEIGHTS = {
+    "form": 0.4,
+    "cd_record": 5,
+    "trainer_jockey": 10,
+    "going": 3,
+    "draw": 1,
+    "freshness": 2,
+    "or_trend": 2,
+    "odds": 2
+}
+
+# --- STREAMLIT UI (Course and Date Selection) ---
+st.title("Horse Race Predictor (Web-Scraped + Historical Analysis)")
+date_input = st.date_input("Select race date", value=datetime.today())
+
+@st.cache_data(show_spinner=False)
+def get_html(url):
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        time.sleep(random.uniform(1, 2))
+        return response.text
+    except Exception as e:
+        print(f"Error fetching URL {url}: {e}")
+        return ""
+
+def fetch_available_courses(date):
+    date_path = date.strftime('%Y-%m-%d').replace('-', '/')
+    base_url = f"https://www.racingpost.com/racecards/{date_path}/"
+    html = get_html(base_url)
+    soup = BeautifulSoup(html, 'html.parser')
+    courses = {}
+    for link in soup.select('a.rc-meeting-item__link'):
+        course_name = link.get_text(strip=True)
+        full_url = "https://www.racingpost.com" + link['href']
+        courses[course_name] = full_url
+    return courses
+
+available_courses = fetch_available_courses(date_input)
+
+if not available_courses:
+    st.warning("No courses found for the selected date.")
+    st.stop()
+
+selected_course = st.selectbox("Select racecourse", list(available_courses.keys()))
+COURSE = selected_course
+
+
 def fetch_racecard_links(date):
     date_path = date.strftime('%Y-%m-%d').replace('-', '/')
     base_url = f"https://www.racingpost.com/racecards/{date_path}/"
@@ -49,6 +112,20 @@ def parse_race(race_url):
             print(f"Error parsing runner row: {e}")
             continue
     return runners
+
+def implied_prob(odds_str):
+    try:
+        f = re.findall(r'(\d+)/(\d+)', odds_str)
+        if f:
+            return float(f[0][1]) / (float(f[0][0]) + float(f[0][1]))
+    except:
+        return 0
+    return 0
+
+def enhanced_form_score(form_str):
+    clean_form = re.sub(r'[^0-9]', '', form_str[-3:])
+    score = sum(10 - int(ch)*2 for ch in clean_form if ch.isdigit())
+    return score
 
 def score_runner(runner):
     score = 0
