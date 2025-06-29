@@ -14,7 +14,7 @@ def fetch_available_courses_api(date):
         "x-rapidapi-key": "cc9b94ab41mshe6d1842b43bf287p1d886ejsn789e8e018289"
     }
     params = {
-        "day": formatted_date,
+        "day": "today",
         "region_codes": "gb"
     }
     try:
