@@ -1,3 +1,9 @@
+import streamlit as st
+from datetime import datetime
+
+# Add date input before calling fetch_available_courses
+date_input = st.date_input("Select race date", value=datetime.today())
+
 def fetch_available_courses(date):
     date_path = date.strftime('%Y-%m-%d').replace('-', '/')
     base_url = f"https://www.racingpost.com/racecards/{date_path}/"
