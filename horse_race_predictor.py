@@ -1,4 +1,8 @@
-def fetch_racecard_links(date):
+import streamlit as st
+from datetime import datetime
+import requests
+
+(date):
     formatted_date = date.strftime('%Y-%m-%d')
     url = "https://the-racing-api1.p.rapidapi.com/v1/racecards/free"
     headers = {
