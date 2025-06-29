@@ -1,25 +1,3 @@
-import streamlit as st
-from datetime import datetime
-import requests
-import time
-import random
-from bs4 import BeautifulSoup
-
-# Utility function to fetch HTML
-def get_html(url):
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        time.sleep(random.uniform(1, 2))
-        return response.text
-    except Exception as e:
-        print(f"Error fetching {url}: {e}")
-        return ""
-
-# Add date input before calling fetch_available_courses
-date_input = st.date_input("Select race date", value=datetime.today())
-
 def fetch_available_courses(date):
     date_path = date.strftime('%Y-%m-%d').replace('-', '/')
     base_url = f"https://www.racingpost.com/racecards/{date_path}/"
@@ -29,11 +7,13 @@ def fetch_available_courses(date):
         return {}
     soup = BeautifulSoup(html, 'html.parser')
     courses = {}
-    for link in soup.select('a.rc-meeting-item__link[href]'):
-        href = link['href']
-        name = link.get_text(strip=True)
-        full_url = "https://www.racingpost.com" + href
-        courses[name] = full_url
+    for a in soup.find_all('a', href=True):
+        href = a['href']
+        if '/racecards/' in href and href.count('/') >= 4:
+            name = a.get_text(strip=True)
+            if name and name not in courses:
+                full_url = "https://www.racingpost.com" + href
+                courses[name] = full_url
     print(f"Found courses: {list(courses.keys())}")
     return courses
 
