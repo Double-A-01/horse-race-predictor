@@ -12,7 +12,25 @@ import random
 import os
 
 # --- CONFIGURATION ---
-COURSE = "Carlisle"
+# --- STREAMLIT UI (Course and Date Selection) ---
+st.title("Horse Race Predictor (Web-Scraped + Historical Analysis)")
+
+# List of UK racecourses (expand as needed)
+COURSE_OPTIONS = [
+    "Aintree", "Ascot", "Ayr", "Bangor-On-Dee", "Bath", "Beverley", "Brighton",
+    "Carlisle", "Catterick", "Chelmsford", "Cheltenham", "Chepstow", "Chester",
+    "Doncaster", "Epsom", "Exeter", "Fakenham", "Goodwood", "Hamilton",
+    "Haydock", "Hereford", "Hexham", "Kempton", "Leicester", "Lingfield",
+    "Market Rasen", "Musselburgh", "Newbury", "Newcastle", "Newmarket",
+    "Nottingham", "Perth", "Plumpton", "Pontefract", "Redcar", "Ripon",
+    "Salisbury", "Sandown", "Sedgefield", "Southwell", "Stratford",
+    "Taunton", "Thirsk", "Uttoxeter", "Warwick", "Wetherby", "Wincanton",
+    "Windsor", "Wolverhampton", "Worcester", "York"
+]
+
+COURSE = st.selectbox("Select racecourse", sorted(COURSE_OPTIONS))
+date_input = st.date_input("Select race date", value=datetime.today())
+
 DRAW_BIAS = {i: 0 for i in range(1, 21)}
 STORAGE_PATH = "race_results.csv"
 
@@ -148,11 +166,8 @@ def show_overall_summary():
     except Exception as e:
         st.write(f"Summary load error: {e}")
 
-# --- STREAMLIT UI ---
-st.title("Horse Race Predictor (Web-Scraped + Historical Analysis)")
-
+# --- STREAMLIT UI CONTINUED ---
 try:
-    date_input = st.date_input("Select race date", value=datetime.today())
     links = fetch_racecard_links(date_input)
 
     if not links:
