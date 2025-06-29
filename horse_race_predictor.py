@@ -1,77 +1,3 @@
-# horse_race_predictor.py (Enhanced with Web Scraping, Results, Storage, Form Analysis)
-
-import requests
-import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-import streamlit as st
-from bs4 import BeautifulSoup
-import re
-import time
-import random
-import os
-
-# --- CONFIGURATION ---
-# --- STREAMLIT UI (Course and Date Selection) ---
-st.title("Horse Race Predictor (Web-Scraped + Historical Analysis)")
-
-# List of UK racecourses (expand as needed)
-COURSE_OPTIONS = [
-    "Aintree", "Ascot", "Ayr", "Bangor-On-Dee", "Bath", "Beverley", "Brighton",
-    "Carlisle", "Catterick", "Chelmsford", "Cheltenham", "Chepstow", "Chester",
-    "Doncaster", "Epsom", "Exeter", "Fakenham", "Goodwood", "Hamilton",
-    "Haydock", "Hereford", "Hexham", "Kempton", "Leicester", "Lingfield",
-    "Market Rasen", "Musselburgh", "Newbury", "Newcastle", "Newmarket",
-    "Nottingham", "Perth", "Plumpton", "Pontefract", "Redcar", "Ripon",
-    "Salisbury", "Sandown", "Sedgefield", "Southwell", "Stratford",
-    "Taunton", "Thirsk", "Uttoxeter", "Warwick", "Wetherby", "Wincanton",
-    "Windsor", "Wolverhampton", "Worcester", "York"
-]
-
-COURSE = st.selectbox("Select racecourse", sorted(COURSE_OPTIONS))
-date_input = st.date_input("Select race date", value=datetime.today())
-
-DRAW_BIAS = {i: 0 for i in range(1, 21)}
-STORAGE_PATH = "race_results.csv"
-
-WEIGHTS = {
-    "form": 0.4,
-    "cd_record": 5,
-    "trainer_jockey": 10,
-    "going": 3,
-    "draw": 1,
-    "freshness": 2,
-    "or_trend": 2,
-    "odds": 2
-}
-
-# --- UTILITY FUNCTIONS ---
-def get_html(url):
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        time.sleep(random.uniform(1, 2))
-        return response.text
-    except Exception as e:
-        print(f"Error fetching URL {url}: {e}")
-        return ""
-
-def implied_prob(odds_str):
-    try:
-        f = re.findall(r'(\d+)/(\d+)', odds_str)
-        if f:
-            return float(f[0][1]) / (float(f[0][0]) + float(f[0][1]))
-    except:
-        return 0
-    return 0
-
-def enhanced_form_score(form_str):
-    clean_form = re.sub(r'[^0-9]', '', form_str[-3:])
-    score = sum(10 - int(ch)*2 for ch in clean_form if ch.isdigit())
-    return score
-
-# --- SCRAPER FUNCTIONS ---
 def fetch_racecard_links(date):
     date_path = date.strftime('%Y-%m-%d').replace('-', '/')
     base_url = f"https://www.racingpost.com/racecards/{date_path}/"
@@ -79,8 +5,11 @@ def fetch_racecard_links(date):
     soup = BeautifulSoup(html, 'html.parser')
     links = []
     for link in soup.select('a.rc-meeting-item__link'):
-        if COURSE.lower() in link.text.lower():
-            links.append("https://www.racingpost.com" + link['href'])
+        link_text = link.get_text(strip=True).lower()
+        course_clean = COURSE.lower()
+        if course_clean in link_text:
+            full_url = "https://www.racingpost.com" + link['href']
+            links.append(full_url)
     return links
 
 def parse_race(race_url):
