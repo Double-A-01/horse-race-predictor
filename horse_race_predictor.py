@@ -1,15 +1,12 @@
-import streamlit as st
-from datetime import datetime
-from bs4 import BeautifulSoup
-import time
-import random
-import cloudscraper
+import requests
 
-# --- Helper to fetch HTML content using cloudscraper ---
+# --- Helper to fetch HTML content using requests ---
 def get_html(url):
-    scraper = cloudscraper.create_scraper()
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    }
     try:
-        response = scraper.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         time.sleep(random.uniform(1, 2))
         return response.text
