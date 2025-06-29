@@ -30,4 +30,12 @@ def fetch_racecard_links(date):
         st.error(f"Error loading racecard links: {e}")
         return []
 
+# --- Display available races for selected course and date ---
+race_links = fetch_racecard_links(date_input)
+if race_links:
+    st.subheader(f"Races at {COURSE} on {date_input.strftime('%Y-%m-%d')}")
+    st.dataframe(race_links)
+else:
+    st.warning("No races found for the selected course and date.")
+
 # [Your existing functions like parse_race, process_scraped_race, etc. continue below without change...]
