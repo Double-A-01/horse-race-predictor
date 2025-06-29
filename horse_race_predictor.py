@@ -1,20 +1,18 @@
 import requests
 from datetime import datetime
 
-# --- Prompt user for date input ---
-date_str = input("Enter race date (YYYY-MM-DD): ")
-date_input = datetime.strptime(date_str, "%Y-%m-%d")
+# --- Prompt user for day keyword (e.g., today, tomorrow, yesterday) ---
+day_keyword = input("Enter race day keyword (e.g., today, tomorrow, yesterday): ").strip().lower()
 
 # --- Replace this function to manually provide course selection ---
-def fetch_available_courses_api(date):
-    formatted_date = date.strftime('%Y-%m-%d')
+def fetch_available_courses_api(day_keyword):
     url = "https://the-racing-api1.p.rapidapi.com/v1/racecards/free"
     headers = {
         "x-rapidapi-host": "the-racing-api1.p.rapidapi.com",
         "x-rapidapi-key": "cc9b94ab41mshe6d1842b43bf287p1d886ejsn789e8e018289"
     }
     params = {
-        "day": "today",
+        "day": day_keyword,
         "region_codes": "gb"
     }
     try:
@@ -32,7 +30,7 @@ def fetch_available_courses_api(date):
         return {}
 
 # --- Display course options and accept user selection ---
-available_courses = fetch_available_courses_api(date_input)
+available_courses = fetch_available_courses_api(day_keyword)
 if not available_courses:
     print("No courses found for the selected date.")
     exit()
@@ -44,3 +42,4 @@ for idx, course in enumerate(available_courses.keys(), start=1):
 choice = int(input("Select a course by number: "))
 COURSE = list(available_courses.keys())[choice - 1]
 print(f"\n✅ You selected: {COURSE}\n")
+
