@@ -1,77 +1,18 @@
-import streamlit as st
-import requests
-import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime
-from bs4 import BeautifulSoup
-import re
-import time
-import random
-import os
-
-# --- CONFIGURATION ---
-DRAW_BIAS = {i: 0 for i in range(1, 21)}
-STORAGE_PATH = "race_results.csv"
-WEIGHTS = {
-    "form": 0.4,
-    "cd_record": 5,
-    "trainer_jockey": 10,
-    "going": 3,
-    "draw": 1,
-    "freshness": 2,
-    "or_trend": 2,
-    "odds": 2
-}
-
-# --- STREAMLIT UI (Course and Date Selection) ---
-st.title("Horse Race Predictor (Web-Scraped + Historical Analysis)")
-date_input = st.date_input("Select race date", value=datetime.today())
-
-@st.cache_data(show_spinner=False)
-def get_html(url):
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        time.sleep(random.uniform(1, 2))
-        return response.text
-    except Exception as e:
-        print(f"Error fetching URL {url}: {e}")
-        return ""
-
-def fetch_available_courses(date):
-    date_path = date.strftime('%Y-%m-%d').replace('-', '/')
-    base_url = f"https://www.racingpost.com/racecards/{date_path}/"
-    html = get_html(base_url)
-    soup = BeautifulSoup(html, 'html.parser')
-    courses = {}
-    for link in soup.select('a.rc-meeting-item__link'):
-        course_name = link.get_text(strip=True)
-        full_url = "https://www.racingpost.com" + link['href']
-        courses[course_name] = full_url
-    return courses
-
-available_courses = fetch_available_courses(date_input)
-
-if not available_courses:
-    st.warning("No courses found for the selected date.")
-    st.stop()
-
-selected_course = st.selectbox("Select racecourse", list(available_courses.keys()))
-COURSE = selected_course
-
-
 def fetch_racecard_links(date):
-    date_path = date.strftime('%Y-%m-%d').replace('-', '/')
-    base_url = f"https://www.racingpost.com/racecards/{date_path}/"
-    html = get_html(base_url)
+    date_path = date.strftime('%Y-%m-%d')
+    course_url = available_courses.get(COURSE)
+    if not course_url:
+        return []
+    html = get_html(course_url)
+    if not html:
+        print("Failed to load course page.")
+        return []
     soup = BeautifulSoup(html, 'html.parser')
     links = []
-    for link in soup.select('a.rc-meeting-item__link'):
-        link_text = link.get_text(strip=True).lower()
-        course_clean = COURSE.lower()
-        if course_clean in link_text:
-            full_url = "https://www.racingpost.com" + link['href']
+    for link in soup.select('a.racecard__time-link[href*="/racecards/"]'):
+        href = link.get('href')
+        if href and '/racecards/' in href:
+            full_url = "https://www.racingpost.com" + href
             links.append(full_url)
     return links
 
