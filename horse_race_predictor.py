@@ -30,6 +30,14 @@ def fetch_racecard_links(date):
         st.error(f"Error loading racecard links: {e}")
         return []
 
+# --- UI Inputs (must appear before use) ---
+date_input = st.date_input("Select race date", value=datetime.today())
+available_courses = fetch_available_courses_api(date_input)
+if not available_courses:
+    st.warning("No courses found for the selected date.")
+    st.stop()
+COURSE = st.selectbox("Select racecourse", list(available_courses.keys()))
+
 # --- Display available races for selected course and date ---
 race_links = fetch_racecard_links(date_input)
 if race_links:
