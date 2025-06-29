@@ -17,13 +17,16 @@ def get_html(url):
         print(f"Error fetching {url}: {e}")
         return ""
 
-# Date input must be declared before using it
+# --- Date input must be declared before use ---
 date_input = st.date_input("Select race date", value=datetime.today())
 
+# --- Fetch available courses for the selected date ---
 def fetch_available_courses(date):
     date_path = date.strftime('%Y-%m-%d').replace('-', '/')
     base_url = f"https://www.racingpost.com/racecards/{date_path}/"
+    print(f"Fetching course list from: {base_url}")
     html = get_html(base_url)
+    print(f"HTML length: {len(html)}")
     if not html:
         print("No HTML returned from Racing Post.")
         return {}
